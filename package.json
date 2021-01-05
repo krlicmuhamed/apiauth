@@ -10,6 +10,7 @@
     "actionhero": "25.0.2",
     "ioredis": "latest",
     "ioredis-mock": "latest",
+    "jsonwebtoken": "^8.5.1",
     "winston": "latest",
     "ws": "latest"
   },

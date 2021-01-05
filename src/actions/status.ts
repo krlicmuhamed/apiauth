@@ -1,6 +1,7 @@
 import { api, id, task, Action, actionheroVersion } from "actionhero";
 import * as path from "path";
 import * as fs from "fs";
+import { AuthenticatedAction } from "./classes/authenticatedAction"
 
 const packageJSON = JSON.parse(
   fs
@@ -13,7 +14,7 @@ const packageJSON = JSON.parse(
 // These values are probably good starting points, but you should expect to tweak them for your application
 const maxMemoryAlloted = process.env.maxMemoryAlloted || 500;
 const maxResqueQueueLength = process.env.maxResqueQueueLength || 1000;
-export class Status extends Action {
+export class Status extends AuthenticatedAction {
   constructor() {
     super();
     this.name = "status";
