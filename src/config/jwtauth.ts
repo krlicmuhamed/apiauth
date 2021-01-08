@@ -4,7 +4,7 @@ export const DEFAULT = {
     return {
       enabled: {
         web: true,
-        websocket: true,
+        websocket: false,
         socket: false,
         testServer: false
       },

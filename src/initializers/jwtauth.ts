@@ -1,5 +1,6 @@
-import { Initializer } from "actionhero";
-import { jsonwebtoken } from "jsonwebtoken";
+import { Initializer, action, api } from "actionhero";
+// import { jsonwebtoken } from "jsonwebtoken";
+const jsonwebtoken = require('jsonwebtoken');
 
 export class MyInitializer extends Initializer {
   constructor() {
@@ -10,11 +11,10 @@ export class MyInitializer extends Initializer {
     this.stopPriority = 1000;
   }
 
-  async initialize(api) {
-    // console.log(api);
+  async initialize(config) {
     api.jwtauth = {
       processToken: function(token, success, fail){
-        jsonwebtoken.verify(token, api.jwtauth.secret, {}, function(err, data){
+        jsonwebtoken.verify(token, config.jwtauth.secret, {}, function(err, data){
           err ? fail(err) : success(data);
         });
       },
@@ -29,11 +29,12 @@ export class MyInitializer extends Initializer {
           options = options ||  {};
         }
         if (!options.algorithm) {
-          options.algorithm = api.jwtauth.algorithm;
+          options.algorithm = config.jwtauth.algorithm;
         }
 
         try {
-          var token = jsonwebtoken.sign(data, api.jwtauth.secret, options);
+          var token = jsonwebtoken.sign(data, config.jwtauth.secret, options);
+          console.log(1, token);
           if (success) {
             success(token);
           }
@@ -46,12 +47,14 @@ export class MyInitializer extends Initializer {
     };
     const jwtMiddleware = {
       name: 'ah-jwt-auth',
+      priority: 1000,
       global: true,
-      preProcessor: function(data, next) {
+      preProcessor: function(data) {
 
         // is it required to have a valid token to access an action?
         var tokenRequired = false;
-        if (data.actionTemplate.authenticate && api.jwtauth.enabled[data.connection.type]) {
+        // console.log(config);
+        if (data.actionTemplate.authenticate && config.jwtauth.enabled[data.connection.type]) {
           tokenRequired = true;
         }
 
@@ -67,17 +70,18 @@ export class MyInitializer extends Initializer {
         // extract token from http headers
         if (authHeader) {
           var parts = authHeader.split(' ');
-          console.log(0, parts);
-          if (parts.length != 2 || parts[0].toLowerCase() !== 'token') {
+          // console.log(0, parts);
+          if (parts.length != 2 || parts[0].toLowerCase() !== 'bearer') {
 
             // return error if token was required and missing
             if (tokenRequired) {
-              return next({
-                code: 500,
-                message: 'Invalid Authorization Header'
-              });
+              // return next({
+              //   code: 500,
+              //   message: 'Invalid Authorization Header'
+              // });
+              throw new Error('Invalid Authorization Header');
             } else {
-              return next();
+              return
             }
 
           }
@@ -85,34 +89,33 @@ export class MyInitializer extends Initializer {
         }
 
         // if action param for tokens is allowed, use it
-        if (!token && api.jwtauth.enableParam && data.params.token) {
+        if (!token && config.jwtauth.enableParam && data.params.token) {
           token = data.params.token;
         }
 
         // return error if token was missing but marked as required
         if (tokenRequired && !token) {
-          return next({
-            code: 500,
-            message: 'Authorization Header Not Set'
-          });
-        }
+          // return next({
+          //   code: 500,
+          //   message: 'Authorization Header Not Set'
+          // });
+          throw new Error('Authorization Header Not Set');
 
+        }
         // process token and save in connection
         else if (token) {
           api.jwtauth.processToken(token, function(claims) {
-            data.connection.jwt = {
+            return data.connection.jwt = {
               token,
               claims
             };
-            next();
-          }, next);
+        }, (msg)=>{throw new Error(msg);});
         } else {
-          return next();
+          return;
         }
       }
     };
-    
-    api.connections.addMiddleware(jwtMiddleware);
+    action.addMiddleware(jwtMiddleware);
   }
 
   async start() {}

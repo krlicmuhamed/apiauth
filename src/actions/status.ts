@@ -1,7 +1,7 @@
 import { api, id, task, Action, actionheroVersion } from "actionhero";
 import * as path from "path";
 import * as fs from "fs";
-import { AuthenticatedAction } from "./classes/authenticatedAction"
+import { AuthenticatedAction } from "../classes/authenticatedAction"
 
 const packageJSON = JSON.parse(
   fs
@@ -24,6 +24,7 @@ export class Status extends AuthenticatedAction {
       actionheroVersion: "9.4.1",
       uptime: 10469,
     };
+    this.authenticate = true;
   }
 
   async run({ connection }) {
