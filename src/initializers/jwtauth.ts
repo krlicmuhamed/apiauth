@@ -46,7 +46,7 @@ export class MyInitializer extends Initializer {
       }
     };
     const jwtMiddleware = {
-      name: 'ah-jwt-auth',
+      name: 'authenticated-action',
       priority: 1000,
       global: true,
       preProcessor: function(data) {
